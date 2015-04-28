@@ -166,10 +166,10 @@ class LRIT:
 
       if self.length is None and len( packet.data ) >= 10:
         ( self.file_counter, self.length ) = struct.unpack( "!HQ",
-                                                            packet.data[0:10] )
+                                                            buffer(packet.data[0:10]) )
       if packet.seq_last and len( self.data ) >= 26:
         ( header_type, record_len, file_type, header_len,
-          bitlength ) = struct.unpack( '!BHBLQ', self.data[10:26] )
+          bitlength ) = struct.unpack( '!BHBLQ', buffer(self.data[10:26]) )
         if header_type != 0:
           print color( 'yellow', "Primary Header Record type is %d, not 0!" %
                                  ( header_type ) )
@@ -204,10 +204,10 @@ class LRIT:
       if not os.path.exists( dir ): os.makedirs( dir )
       filename = "%s/%d" % ( dir, self.file_counter )
       fd = open( filename + ".head", "w" )
-      fd.write( self.data[10:26 + self.header_len - self.record_len] )
+      fd.write( buffer( self.data[10:26 + self.header_len - self.record_len] ) )
       fd.close()
       fd = open( filename, "w" )
-      fd.write( self.data[26 + self.header_len - self.record_len:] )
+      fd.write( buffer( self.data[26 + self.header_len - self.record_len:] ) )
       fd.close()
 
   #############################################################################
@@ -218,7 +218,8 @@ class LRIT:
       data_len = len( data )
       if data_len < 6:                   # too short to be complete, abort
         return
-      ( id, seq, length ) = struct.unpack( "!HHH", data[0:6] )
+      print repr(data[0:6])
+      ( id, seq, length ) = struct.unpack( "!HHH", buffer(data[0:6]) )
       length += 1                        # length = octets in data *minus one*
       self.version        = ( id & 0xe000 ) >> 13
       self.type           = ( id & 0x1000 ) >> 12
@@ -232,7 +233,7 @@ class LRIT:
         self.version = None
         return
       self.data = data[6:length+4]         # trim off header and CRC
-      self.crc = struct.unpack( "!H", data[length+4:length+6] )[0]
+      self.crc = struct.unpack( "!H", buffer(data[length+4:length+6]) )[0]
       computed_crc = crc( self.data )
       msg = """CP_PDU Packet:
    Version: %4d    APID: %5d  Counter: %5d
@@ -304,6 +305,7 @@ def cfg( *indices ):
 
 if __name__ == '__main__':
   config = '/usr/apps/lrit_files/script/config.json'
+  config = 'config.json'
   conf = json.loads( ''.join( open( config ).readlines() ) )
   filename = None
   if len( sys.argv ) > 1:
@@ -315,7 +317,7 @@ if __name__ == '__main__':
 
   rs = reedsolomon( 8, 16, 112, 11, 0, 4, 0, 1 )
 
-  for frame in LRIT( '137.161.185.231', file=filename ):
+  for frame in LRIT( '130.165.21.239', file=filename ):
     if not tuning( frame.channel ):
       continue
     chan = channel[frame.channel]
