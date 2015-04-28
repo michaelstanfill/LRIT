@@ -218,7 +218,6 @@ class LRIT:
       data_len = len( data )
       if data_len < 6:                   # too short to be complete, abort
         return
-      print repr(data[0:6])
       ( id, seq, length ) = struct.unpack( "!HHH", buffer(data[0:6]) )
       length += 1                        # length = octets in data *minus one*
       self.version        = ( id & 0xe000 ) >> 13
@@ -317,7 +316,7 @@ if __name__ == '__main__':
 
   rs = reedsolomon( 8, 16, 112, 11, 0, 4, 0, 1 )
 
-  for frame in LRIT( '130.165.21.239', file=filename ):
+  for frame in LRIT( cfg("address"), port=cfg("port"), file=filename ):
     if not tuning( frame.channel ):
       continue
     chan = channel[frame.channel]
