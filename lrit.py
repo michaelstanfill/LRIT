@@ -302,13 +302,20 @@ def cfg( *indices ):
     cf = cf[index]
   return cf
 
+def parseArgs():
+  import optparse
+  parser=optparse.OptionParser()
+  parser.add_option('-c', '--config', dest='config', default="/usr/apps/lrit_files/script/config.json", help="JSON config file", metavar="CONFIGFILE")
+  parser.add_option('-f', '--file', dest='filename', default=None, help="File of data to test data from instead of connecting live data.", metavar="DATAFILE" )
+
+  return parser.parse_args()[0] # note, this will need to be changed if anyone wants to add non-named arguments
+
 if __name__ == '__main__':
-  config = '/usr/apps/lrit_files/script/config.json'
-  config = 'config.json'
+  args = parseArgs()
+  config = args.config
   conf = json.loads( ''.join( open( config ).readlines() ) )
-  filename = None
-  if len( sys.argv ) > 1:
-    filename = sys.argv[1]
+  filename = args.filename
+  if filename is not None:
     print "Reading satellite data from file: ", filename
   channel = []
   for chan in range( 64 ):
